@@ -144,3 +144,13 @@ baseurl=http://vault.centos.org/7.9.2009/extras/x86_64/
 gpgcheck=0
 enabled=1
 EOF
+
+Télécharger GTK3 pour CentOS 7 :
+wget http://mirror.centos.org/centos/7/os/x86_64/Packages/gtk3-3.22.30-11.el7.x86_64.rpm
+wget http://mirror.centos.org/centos/7/os/x86_64/Packages/glib2-2.56.1-9.el7.x86_64.rpm
+wget http://mirror.centos.org/centos/7/os/x86_64/Packages/gsettings-desktop-schemas-3.28.0-3.el7.x86_64.rpm
+
+Installer manuellement :
+sudo rpm -ivh --nodeps gtk3-3.22.30-11.el7.x86_64.rpm
+sudo rpm -ivh --nodeps glib2-2.56.1-9.el7.x86_64.rpm
+sudo rpm -ivh --nodeps gsettings-desktop-schemas-3.28.0-3.el7.x86_64.rpm
