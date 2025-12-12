@@ -173,3 +173,223 @@ Ensuite :
 
 sudo yum clean all
 sudo yum makecache
+
+sudo yum install gtk3 libX11 libXcomposite libXcursor libXdamage libXext libXi libXrandr libXScrnSaver libXtst freetype freetype-devel fontconfig
+
+/*
+  Master M1 BD2C
+	Année 2018/2019
+  --
+  TP1: exemple de programme Hadoop - compteur d'occurences de mots.
+  --
+  WCountMap.java: classe driver (contient le main du programme).
+*/
+
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.util.GenericOptionsParser;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.IntWritable;
+
+
+// Note classe Driver (contient le main du programme Hadoop).
+public class WCount {
+    // Le main du programme.
+    public static void main(String[] args) throws Exception {
+        // Créé un object de configuration Hadoop.
+        Configuration conf = new Configuration();
+
+        // Permet à Hadoop de lire ses arguments génériques, récupère les arguments restants dans ourArgs.
+        String[] ourArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
+
+        // Obtient un nouvel objet Job: une tâche Hadoop. On fourni la configuration Hadoop ainsi qu'une description
+        // textuelle de la tâche.
+        Job job = Job.getInstance(conf, "Compteur de mots v1.0");
+
+        // Défini les classes driver, map et reduce.
+        job.setJarByClass(WCount.class);
+        job.setMapperClass(WCountMap.class);
+        job.setReducerClass(WCountReduce.class);
+
+        // Défini types clefs/valeurs de notre programme Hadoop.
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(IntWritable.class);
+
+        // Défini les fichiers d'entrée du programme et le répertoire des résultats.
+        // On se sert du premier et du deuxième argument restants pour permettre à l'utilisateur de les spécifier
+        // lors de l'exécution.
+        FileInputFormat.addInputPath(job, new Path(ourArgs[0]));
+        FileOutputFormat.setOutputPath(job, new Path(ourArgs[1]));
+
+        // On lance la tâche Hadoop. Si elle s'est effectuée correctement, on renvoie 0. Sinon, on renvoie -1.
+        if (job.waitForCompletion(true))
+            System.exit(0);
+        System.exit(-1);
+    }
+}
+
+
+/*
+  Master M1 BD2C
+	Année 2018/2019
+  --
+  TP1: exemple de programme Hadoop - compteur d'occurences de mots.
+  --
+  WCountMap.java: classe MAP.
+*/
+
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.IntWritable;
+
+import java.util.StringTokenizer;
+
+import org.apache.hadoop.mapreduce.Mapper;
+
+import java.io.IOException;
+
+
+// Notre classe MAP.
+public class WCountMap extends Mapper<Object, Text, Text, IntWritable> {
+    private static final IntWritable ONE = new IntWritable(1);
+
+    // La fonction MAP elle-même.
+    protected void map(Object key, Text value, Context context) throws IOException, InterruptedException {
+
+        // Un StringTokenizer va nous permettre de parcourir chacun des mots de la ligne qui est passée
+        // à notre opération MAP.
+        StringTokenizer tok = new StringTokenizer(value.toString(), " ");
+        while (tok.hasMoreTokens()) {
+            Text word = new Text(tok.nextToken());
+            // On renvoie notre couple (clef;valeur): le mot courant suivi de la valeur 1 (définie dans la constante ONE).
+            context.write(word, ONE);
+        }
+    }
+}
+
+/*
+  Master M1 BD2C
+	Année 2018/2019
+  --
+  TP1: exemple de programme Hadoop - compteur d'occurences de mots.
+  --
+  WCountReduce.java: classe REDUCE.
+*/
+
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.mapreduce.Reducer;
+
+import java.util.Iterator;
+import java.io.IOException;
+
+
+// Notre classe REDUCE - templatée avec un type générique K pour la clef, un type de valeur IntWritable, et un type de retour
+// (le retour final de la fonction Reduce) Text.
+public class WCountReduce extends Reducer<Text, IntWritable, Text, Text> {
+
+    // La fonction REDUCE elle-même. Les arguments: la clef key (d'un type générique K), un Iterable de toutes les valeurs
+    // qui sont associées à la clef en question, et le contexte Hadoop (un handle qui nous permet de renvoyer le résultat à Hadoop).
+    public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
+
+        // Pour parcourir toutes les valeurs associées à la clef fournie.
+        Iterator<IntWritable> i = values.iterator();
+        int count = 0;
+        while (i.hasNext())   // Pour chaque valeur...
+            count += i.next().get();    // ...on l'ajoute au total.
+        // On renvoie le couple (clef;valeur) constitué de notre clef key et du total, au format Text.
+        context.write(key, new Text(count + " occurences."));
+    }
+}
+
+===poeme.txt====
+celui qui croyait au ciel
+celui qui ny croyait pas
+tous deux adoraient la belle
+prisonniere des soldats
+lequel montait a lechelle
+et lequel guettait en bas
+celui qui croyait au ciel
+celui qui ny croyait pas
+quimporte comment sappelle
+cette clarte sur leur pas
+que lun fut de la chapelle
+et lautre sy derobât
+celui qui croyait au ciel
+celui qui ny croyait pas
+tous les deux etaient fideles
+des levres du coeur des bras
+et tous les deux disaient quelle
+vive et qui vivra verra
+celui qui croyait au ciel
+celui qui ny croyait pas
+quand les bles sont sous la grele
+fou qui fait le delicat
+fou qui songe a ses querelles
+au coeur du commun combat
+celui qui croyait au ciel
+celui qui ny croyait pas
+du haut de la citadelle
+la sentinelle tira
+par deux fois et lun chancelle
+lautre tombe qui mourra
+celui qui croyait au ciel
+celui qui ny croyait pas
+ils sont en prison lequel
+a le plus triste grabat
+lequel plus que lautre gele
+lequel prefere les rats
+celui qui croyait au ciel
+celui qui ny croyait pas
+un rebelle est un rebelle
+deux sanglots font un seul glas
+et quand vient laube cruelle
+passent de vie a trepas
+celui qui croyait au ciel
+celui qui ny croyait pas
+repetant le nom de celle
+quaucun des deux ne trompa
+et leur sang rouge ruisselle
+meme couleur meme eclat
+celui qui croyait au ciel
+celui qui ny croyait pas
+il coule il coule il se mele
+a la terre quil aima
+pour qua la saison nouvelle
+murisse un raisin muscat
+celui qui croyait au ciel
+celui qui ny croyait pas
+lun court et lautre a des ailes
+de bretagne ou du jura
+et framboise ou mirabelle
+le grillon rechantera
+dites flute ou violoncelle
+le double amour qui brula
+lalouette et lhirondelle
+la rose et le reseda 
+
+--on édite WCount.java WCountMap.java WCountReduce.java 
+--et on les place dans le répertoire ~/WordCountJava qu’il faut créer au préalable
+
+--Compilation  dans le répertoire ~/WordCountJava
+#hadoop com.sun.tools.javac.Main  WordCountJava/WCount*.java
+#mkdir -p WordCountJava/build
+#mv WordCountJava/WCount*.class WordCountJava/build
+#jar -cvf wc.jar -C WordCountJava/build  .
+--Préparation des données sur HDFS
+
+-- télécharger le fichier poeme.txt dans dans votre répertoire personnel  /home/hduser/WordCountJava (~/WordCountJava)
+-- le fichier poeme.txt est fourni comme ressource de ce chapitre
+# cd ~
+#hdfs dfs -put WordCountJava/poeme.txt data   (data par défaut est /user/hduser/data   déjà creé dans l'atalier installerHadoop) 
+--(results par défaut est /user/hduser/results   déjà creé dans l'atalier installerHadoop) 
+
+--Exécution
+#hadoop jar wc.jar WCount  data results/wcoutput  --wcoutput sera creé automatiquement  et contiendra les fichiers résultat part-r-xxxxx
+
+--Affichage des résultats
+#hdfs dfs -ls results/wcoutput
+#hdfs dfs -cat results/wcoutput/part-r-00000
